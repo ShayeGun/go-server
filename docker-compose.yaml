@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  database:
+    container_name: go-postgres
+    image: 74cc00b2e28f
+    restart: always
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=go-test
+    ports:
+      - 5432:5432
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "go-test"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
