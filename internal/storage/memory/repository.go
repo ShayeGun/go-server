@@ -1,12 +1,12 @@
 package memory
 
 import (
-	"github.com/ShayeGun/go-server/internal/service"
+	"github.com/ShayeGun/go-server/internal/common"
 	"github.com/ShayeGun/go-server/models"
 )
 
 type Repository struct {
-	userCollection service.UserRepositoryInterface
+	userCollection common.UserRepositoryInterface
 }
 
 func NewRepository() *Repository {
@@ -17,6 +17,6 @@ func NewRepository() *Repository {
 	}
 }
 
-func (r *Repository) GetUserTable() service.UserRepositoryInterface {
+func (r *Repository) GetUserTable() common.UserRepositoryInterface {
 	return r.userCollection
 }

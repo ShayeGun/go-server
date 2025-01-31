@@ -5,30 +5,20 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ShayeGun/go-server/internal/service"
+	"github.com/ShayeGun/go-server/internal/common"
 	"github.com/ShayeGun/go-server/internal/storage/memory"
 	"github.com/ShayeGun/go-server/internal/util"
 	"github.com/ShayeGun/go-server/models"
 	"github.com/go-chi/chi/v5"
 )
 
-type RepositoryInterface interface {
-	GetUserTable() service.UserRepositoryInterface
-}
-
-type ExternalDependencies struct {
-	RepositoryInterface
-	//logger
-	// cache
-}
-
 type UserRoutes struct {
-	dep *ExternalDependencies
+	userService common.UserServiceInterface
 }
 
-func NewUserRoutes(dep *ExternalDependencies) UserRoutes {
+func NewUserRoutes(us common.UserServiceInterface) UserRoutes {
 	return UserRoutes{
-		dep: dep,
+		userService: us,
 	}
 }
 
@@ -41,20 +31,10 @@ func (u *UserRoutes) SetupUserRoutes(r *chi.Mux) *chi.Mux {
 	return r
 }
 
-func (u *UserRoutes) getUser() func(w http.ResponseWriter, r *http.Request) {
+func (ur *UserRoutes) getUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		us, err := service.NewUserService(
-			service.WithUserRepository(u.dep.GetUserTable()),
-		)
-
-		if err != nil {
-			log.Println(err)
-			util.WriteJSONError(w, http.StatusInternalServerError, "internal service error")
-			return
-		}
 		uidStr := chi.URLParam(r, "uid")
-
-		u, err := us.UserRepository.GetById(uidStr)
+		u, err := ur.userService.GetUser(uidStr)
 		if err != nil {
 			util.WriteJSONError(w, http.StatusNotFound, err.Error())
 			return
@@ -64,18 +44,8 @@ func (u *UserRoutes) getUser() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *UserRoutes) addUser() func(w http.ResponseWriter, r *http.Request) {
+func (ur *UserRoutes) addUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		us, err := service.NewUserService(
-			service.WithUserRepository(u.dep.GetUserTable()),
-		)
-
-		if err != nil {
-			log.Println(err)
-			util.WriteJSONError(w, http.StatusInternalServerError, "internal service error")
-			return
-		}
-
 		var user models.User
 
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -84,7 +54,7 @@ func (u *UserRoutes) addUser() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		u, err := us.UserRepository.Add(user)
+		u, err := ur.userService.AddUser(user)
 
 		if err != nil {
 			log.Println(memory.ErrUserAlreadyExists)
@@ -96,18 +66,8 @@ func (u *UserRoutes) addUser() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *UserRoutes) updateUser() func(w http.ResponseWriter, r *http.Request) {
+func (ur *UserRoutes) updateUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		us, err := service.NewUserService(
-			service.WithUserRepository(u.dep.GetUserTable()),
-		)
-
-		if err != nil {
-			log.Println(err)
-			util.WriteJSONError(w, http.StatusInternalServerError, "internal service error")
-			return
-		}
-
 		uidStr := chi.URLParam(r, "uid")
 
 		user := models.User{
@@ -120,7 +80,7 @@ func (u *UserRoutes) updateUser() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		u, err := us.UserRepository.Update(user)
+		u, err := ur.userService.UpdateUser(user)
 
 		if err != nil {
 			log.Println(memory.ErrUserAlreadyExists)
@@ -132,20 +92,11 @@ func (u *UserRoutes) updateUser() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *UserRoutes) deleteUser() func(w http.ResponseWriter, r *http.Request) {
+func (ur *UserRoutes) deleteUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		us, err := service.NewUserService(
-			service.WithUserRepository(u.dep.GetUserTable()),
-		)
-
-		if err != nil {
-			log.Println(err)
-			util.WriteJSONError(w, http.StatusInternalServerError, "internal service error")
-			return
-		}
 		uidStr := chi.URLParam(r, "uid")
 
-		if err := us.UserRepository.Delete(uidStr); err != nil {
+		if err := ur.userService.DeleteUser(uidStr); err != nil {
 			util.WriteJSONError(w, http.StatusNotFound, err.Error())
 			return
 		}

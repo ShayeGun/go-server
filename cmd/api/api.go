@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ShayeGun/go-server/internal/common"
 	"github.com/ShayeGun/go-server/internal/routes"
 	"github.com/ShayeGun/go-server/internal/util"
 
@@ -20,14 +21,14 @@ type config struct {
 	addr string
 }
 
-func (app *application) mount(exd *routes.ExternalDependencies) http.Handler {
+func (app *application) mount(ser common.ServiceInterface) http.Handler {
 	r := chi.NewRouter()
 
 	// Non-functional
 	routes.SetUpInitialRoutes(r)
 
 	// Functional
-	u := routes.NewUserRoutes(exd)
+	u := routes.NewUserRoutes(ser.GetUserService())
 	r = u.SetupUserRoutes(r)
 
 	return r

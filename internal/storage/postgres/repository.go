@@ -6,12 +6,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/ShayeGun/go-server/internal/service"
+	"github.com/ShayeGun/go-server/internal/common"
 	"github.com/jackc/pgx/v5"
 )
 
 type Repository struct {
-	userCollection service.UserRepositoryInterface
+	userCollection common.UserRepositoryInterface
 	q              *Queries
 }
 
@@ -31,6 +31,6 @@ func NewRepository(ctx context.Context, connStr string) (*Repository, error) {
 	}, nil
 }
 
-func (r *Repository) GetUserTable() service.UserRepositoryInterface {
+func (r *Repository) GetUserTable() common.UserRepositoryInterface {
 	return r.userCollection
 }

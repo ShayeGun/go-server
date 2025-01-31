@@ -10,19 +10,20 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/ShayeGun/go-server/internal/common"
+	"github.com/ShayeGun/go-server/internal/service"
 	"github.com/ShayeGun/go-server/internal/storage/memory"
 	"github.com/ShayeGun/go-server/models"
 )
 
 func TestGetUserHandler(t *testing.T) {
-	// Create an instance of the application
-	store := memory.NewRepository()
-
-	ext := &ExternalDependencies{
-		store,
+	// ARRANGE
+	dep := common.ExternalDependencies{
+		RepositoryInterface: memory.NewRepository(),
 	}
 
-	uc := NewUserRoutes(ext)
+	services, _ := service.NewService(dep)
+	uc := NewUserRoutes(services.GetUserService())
 
 	user := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -30,9 +31,8 @@ func TestGetUserHandler(t *testing.T) {
 		Password: "test-pass",
 	}
 
-	ext.GetUserTable().Add(user)
+	dep.GetUserTable().Add(user)
 
-	// Create a new HTTP request
 	req, err := http.NewRequest(http.MethodGet, "/2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb", nil)
 	if err != nil {
 		t.Fatalf("Could not create request: %v", err)
@@ -45,19 +45,18 @@ func TestGetUserHandler(t *testing.T) {
 	// Create a ResponseRecorder to capture the response
 	rr := httptest.NewRecorder()
 
-	// Call the handler function
+	// ACT
 	handler := http.HandlerFunc(uc.getUser())
 	handler.ServeHTTP(rr, req)
 
 	resUser := &models.User{}
 	json.NewDecoder(rr.Body).Decode(resUser)
 
-	// Check the status code
+	// ASSERT
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 
-	// Check the response body
 	expected := user
 	if *resUser != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
@@ -65,14 +64,12 @@ func TestGetUserHandler(t *testing.T) {
 }
 
 func TestAddUserHandler(t *testing.T) {
-	// Create an instance of the application
-	store := memory.NewRepository()
-
-	ext := &ExternalDependencies{
-		store,
+	// ARRANGE
+	dep := common.ExternalDependencies{
+		RepositoryInterface: memory.NewRepository(),
 	}
-
-	uc := NewUserRoutes(ext)
+	services, _ := service.NewService(dep)
+	uc := NewUserRoutes(services.GetUserService())
 
 	data := map[string]string{
 		"id":       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -85,7 +82,6 @@ func TestAddUserHandler(t *testing.T) {
 		t.Fatalf("Could not marshal request body: %v", err)
 	}
 
-	// Create a new HTTP request
 	req, err := http.NewRequest(http.MethodGet, "", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		t.Fatalf("Could not create request: %v", err)
@@ -94,19 +90,18 @@ func TestAddUserHandler(t *testing.T) {
 	// Create a ResponseRecorder to capture the response
 	rr := httptest.NewRecorder()
 
-	// Call the handler function
+	// ACT
 	handler := http.HandlerFunc(uc.addUser())
 	handler.ServeHTTP(rr, req)
 
 	resUser := &models.User{}
 	json.NewDecoder(rr.Body).Decode(resUser)
 
-	// Check the status code
+	// ASSERT
 	if status := rr.Code; status != http.StatusCreated {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusCreated)
 	}
 
-	// Check the response body
 	expected := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
 		Email:    "test-email",
@@ -118,14 +113,12 @@ func TestAddUserHandler(t *testing.T) {
 }
 
 func TestUpdateUserHandler(t *testing.T) {
-	// Create an instance of the application
-	store := memory.NewRepository()
-
-	ext := &ExternalDependencies{
-		store,
+	// ARRANGE
+	dep := common.ExternalDependencies{
+		RepositoryInterface: memory.NewRepository(),
 	}
-
-	uc := NewUserRoutes(ext)
+	services, _ := service.NewService(dep)
+	uc := NewUserRoutes(services.GetUserService())
 
 	user := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -138,14 +131,13 @@ func TestUpdateUserHandler(t *testing.T) {
 		"password": "test-changed-password",
 	}
 
-	ext.GetUserTable().Add(user)
+	dep.GetUserTable().Add(user)
 
 	jsonBody, err := json.Marshal(data)
 	if err != nil {
 		t.Fatalf("Could not marshal request body: %v", err)
 	}
 
-	// Create a new HTTP request
 	req, err := http.NewRequest(http.MethodGet, "/2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		t.Fatalf("Could not create request: %v", err)
@@ -158,19 +150,18 @@ func TestUpdateUserHandler(t *testing.T) {
 	// Create a ResponseRecorder to capture the response
 	rr := httptest.NewRecorder()
 
-	// Call the handler function
+	// ACT
 	handler := http.HandlerFunc(uc.updateUser())
 	handler.ServeHTTP(rr, req)
 
 	resUser := &models.User{}
 	json.NewDecoder(rr.Body).Decode(resUser)
 
-	// Check the status code
+	// ASSERT
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusNotFound)
 	}
 
-	// Check the response body
 	expected := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
 		Email:    "test-email",
@@ -182,14 +173,12 @@ func TestUpdateUserHandler(t *testing.T) {
 }
 
 func TestDeleteUserHandler(t *testing.T) {
-	// Create an instance of the application
-	store := memory.NewRepository()
-
-	ext := &ExternalDependencies{
-		store,
+	// ARRANGE
+	dep := common.ExternalDependencies{
+		RepositoryInterface: memory.NewRepository(),
 	}
-
-	uc := NewUserRoutes(ext)
+	services, _ := service.NewService(dep)
+	uc := NewUserRoutes(services.GetUserService())
 
 	user := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -197,10 +186,9 @@ func TestDeleteUserHandler(t *testing.T) {
 		Password: "test-pass",
 	}
 
-	repo := ext.GetUserTable()
+	repo := dep.GetUserTable()
 	repo.Add(user)
 
-	// Create a new HTTP request
 	req, err := http.NewRequest(http.MethodGet, "/2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb", nil)
 	if err != nil {
 		t.Fatalf("Could not create request: %v", err)
@@ -213,11 +201,11 @@ func TestDeleteUserHandler(t *testing.T) {
 	// Create a ResponseRecorder to capture the response
 	rr := httptest.NewRecorder()
 
-	// Call the handler function
+	// ACT
 	handler := http.HandlerFunc(uc.deleteUser())
 	handler.ServeHTTP(rr, req)
 
-	// Check the status code
+	// ASSERT
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
