@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
 	"bytes"
@@ -8,48 +8,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/ShayeGun/go-server/internal/storage/memory"
 	"github.com/ShayeGun/go-server/models"
-	"github.com/go-chi/chi/v5"
 )
-
-func TestHealthCheckHandler(t *testing.T) {
-	// Create an instance of the application
-	app := &application{}
-
-	// Create a new HTTP request
-	req, err := http.NewRequest(http.MethodGet, "", nil)
-	if err != nil {
-		t.Fatalf("Could not create request: %v", err)
-	}
-
-	// Create a ResponseRecorder to capture the response
-	rr := httptest.NewRecorder()
-
-	// Call the handler function
-	handler := http.HandlerFunc(app.healthCheckHandler)
-	handler.ServeHTTP(rr, req)
-
-	// Check the status code
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
-
-	// Check the response body
-	expected := "ok"
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-	}
-}
 
 func TestGetUserHandler(t *testing.T) {
 	// Create an instance of the application
-	app := &application{}
 	store := memory.NewRepository()
 
-	ext := &externalDependencies{
+	ext := &ExternalDependencies{
 		store,
 	}
+
+	uc := NewUserRoutes(ext)
 
 	user := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -73,7 +46,7 @@ func TestGetUserHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	// Call the handler function
-	handler := http.HandlerFunc(app.getUser(ext))
+	handler := http.HandlerFunc(uc.getUser())
 	handler.ServeHTTP(rr, req)
 
 	resUser := &models.User{}
@@ -93,12 +66,13 @@ func TestGetUserHandler(t *testing.T) {
 
 func TestAddUserHandler(t *testing.T) {
 	// Create an instance of the application
-	app := &application{}
 	store := memory.NewRepository()
 
-	ext := &externalDependencies{
+	ext := &ExternalDependencies{
 		store,
 	}
+
+	uc := NewUserRoutes(ext)
 
 	data := map[string]string{
 		"id":       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -121,7 +95,7 @@ func TestAddUserHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	// Call the handler function
-	handler := http.HandlerFunc(app.addUser(ext))
+	handler := http.HandlerFunc(uc.addUser())
 	handler.ServeHTTP(rr, req)
 
 	resUser := &models.User{}
@@ -145,12 +119,13 @@ func TestAddUserHandler(t *testing.T) {
 
 func TestUpdateUserHandler(t *testing.T) {
 	// Create an instance of the application
-	app := &application{}
 	store := memory.NewRepository()
 
-	ext := &externalDependencies{
+	ext := &ExternalDependencies{
 		store,
 	}
+
+	uc := NewUserRoutes(ext)
 
 	user := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -184,7 +159,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	// Call the handler function
-	handler := http.HandlerFunc(app.updateUser(ext))
+	handler := http.HandlerFunc(uc.updateUser())
 	handler.ServeHTTP(rr, req)
 
 	resUser := &models.User{}
@@ -208,12 +183,13 @@ func TestUpdateUserHandler(t *testing.T) {
 
 func TestDeleteUserHandler(t *testing.T) {
 	// Create an instance of the application
-	app := &application{}
 	store := memory.NewRepository()
 
-	ext := &externalDependencies{
+	ext := &ExternalDependencies{
 		store,
 	}
+
+	uc := NewUserRoutes(ext)
 
 	user := models.User{
 		ID:       "2ac7231d-ba1b-42d9-8410-6e3fb74a3fbb",
@@ -238,7 +214,7 @@ func TestDeleteUserHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	// Call the handler function
-	handler := http.HandlerFunc(app.deleteUser(ext))
+	handler := http.HandlerFunc(uc.deleteUser())
 	handler.ServeHTTP(rr, req)
 
 	// Check the status code

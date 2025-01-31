@@ -1,10 +1,9 @@
-package main
+package routes
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/ShayeGun/go-server/internal/service"
 	"github.com/ShayeGun/go-server/internal/storage/memory"
@@ -13,19 +12,39 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("ok"))
+type RepositoryInterface interface {
+	GetUserTable() service.UserRepositoryInterface
 }
 
-func (app *application) slowHandler(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(time.Second * 5)
-	w.Write([]byte("slow done"))
+type ExternalDependencies struct {
+	RepositoryInterface
+	//logger
+	// cache
 }
 
-func (app *application) getUser(e *externalDependencies) func(w http.ResponseWriter, r *http.Request) {
+type UserRoutes struct {
+	dep *ExternalDependencies
+}
+
+func NewUserRoutes(dep *ExternalDependencies) UserRoutes {
+	return UserRoutes{
+		dep: dep,
+	}
+}
+
+func (u *UserRoutes) SetupUserRoutes(r *chi.Mux) *chi.Mux {
+	r.Get("/v1/users/{uid}", u.getUser())
+	r.Post("/v1/users", u.addUser())
+	r.Delete("/v1/users/{uid}", u.deleteUser())
+	r.Patch("/v1/users/{uid}", u.updateUser())
+
+	return r
+}
+
+func (u *UserRoutes) getUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		us, err := service.NewUserService(
-			service.WithUserRepository(e.GetUserTable()),
+			service.WithUserRepository(u.dep.GetUserTable()),
 		)
 
 		if err != nil {
@@ -45,10 +64,10 @@ func (app *application) getUser(e *externalDependencies) func(w http.ResponseWri
 	}
 }
 
-func (app *application) addUser(e *externalDependencies) func(w http.ResponseWriter, r *http.Request) {
+func (u *UserRoutes) addUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		us, err := service.NewUserService(
-			service.WithUserRepository(e.GetUserTable()),
+			service.WithUserRepository(u.dep.GetUserTable()),
 		)
 
 		if err != nil {
@@ -77,10 +96,10 @@ func (app *application) addUser(e *externalDependencies) func(w http.ResponseWri
 	}
 }
 
-func (app *application) updateUser(e *externalDependencies) func(w http.ResponseWriter, r *http.Request) {
+func (u *UserRoutes) updateUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		us, err := service.NewUserService(
-			service.WithUserRepository(e.GetUserTable()),
+			service.WithUserRepository(u.dep.GetUserTable()),
 		)
 
 		if err != nil {
@@ -113,10 +132,10 @@ func (app *application) updateUser(e *externalDependencies) func(w http.Response
 	}
 }
 
-func (app *application) deleteUser(e *externalDependencies) func(w http.ResponseWriter, r *http.Request) {
+func (u *UserRoutes) deleteUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		us, err := service.NewUserService(
-			service.WithUserRepository(e.GetUserTable()),
+			service.WithUserRepository(u.dep.GetUserTable()),
 		)
 
 		if err != nil {

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ShayeGun/go-server/internal/routes"
 	db "github.com/ShayeGun/go-server/internal/storage/postgres"
 	"github.com/joho/godotenv"
 )
@@ -29,8 +30,8 @@ func main() {
 		panic(err)
 	}
 
-	ed := &externalDependencies{
-		store,
+	ed := &routes.ExternalDependencies{
+		RepositoryInterface: store,
 	}
 
 	mux := app.mount(ed)
