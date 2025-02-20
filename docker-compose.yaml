@@ -4,17 +4,35 @@ services:
   database:
     container_name: go-postgres
     image: 74cc00b2e28f
-    restart: always
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DB=go-test
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - 5432:5432
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "admin", "-d", "go-test"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  app:
+    container_name: go-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - PORT=${PORT}
+      - DB_URI=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
+    ports:
+      - "${PORT}:${PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "localhost:${PORT}/v1/health"]
       interval: 10s
       timeout: 5s
       retries: 3

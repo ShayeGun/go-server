@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -37,7 +38,7 @@ func (app *application) mount(ser common.ServiceInterface) http.Handler {
 func (app *application) run(mux http.Handler) {
 
 	srv := &http.Server{
-		Addr:         app.config.addr,
+		Addr:         fmt.Sprintf(":%s", app.config.addr),
 		Handler:      mux,
 		WriteTimeout: time.Second * 10,
 		ReadTimeout:  time.Second * 5,

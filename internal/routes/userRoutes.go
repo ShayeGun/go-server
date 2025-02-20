@@ -16,8 +16,8 @@ type UserRoutes struct {
 	userService common.UserServiceInterface
 }
 
-func NewUserRoutes(us common.UserServiceInterface) UserRoutes {
-	return UserRoutes{
+func NewUserRoutes(us common.UserServiceInterface) *UserRoutes {
+	return &UserRoutes{
 		userService: us,
 	}
 }

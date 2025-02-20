@@ -13,8 +13,11 @@ import (
 
 func main() {
 	ctx := context.Background()
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+
+	if os.Getenv("ENV") != "production" {
+		if err := godotenv.Load(); err != nil {
+			log.Fatal("Warning: No .env file found")
+		}
 	}
 
 	cfg := config{
